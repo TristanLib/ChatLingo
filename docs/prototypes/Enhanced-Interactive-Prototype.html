@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatLingo 2.0 - 必会专题 + AI助手 演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 8px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .status-bar {
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .header {
+            height: 60px;
+            background: #00A6FB;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .content {
+            flex: 1;
+            background: #f8f9fa;
+            overflow-y: auto;
+        }
+
+        .bottom-nav {
+            height: 80px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: color 0.2s;
+            border-radius: 8px;
+        }
+
+        .nav-item.active {
+            color: #00A6FB;
+            background: rgba(0, 166, 251, 0.1);
+        }
+
+        .nav-item:hover {
+            color: #00A6FB;
+        }
+
+        /* 欢迎页样式 */
+        .welcome-screen {
+            text-align: center;
+            padding: 60px 30px;
+            background: linear-gradient(135deg, #00A6FB 0%, #0D7377 100%);
+            color: white;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .app-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .version-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-bottom: 30px;
+            display: inline-block;
+        }
+
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .features {
+            text-align: left;
+            margin-bottom: 40px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .feature-item::before {
+            content: '✨';
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .start-button {
+            background: #fff;
+            color: #00A6FB;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Dashboard样式增强 */
+        .dashboard-content {
+            padding: 20px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .essential-progress-card {
+            background: linear-gradient(135deg, #00A6FB, #0D7377);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 8px 25px rgba(0, 166, 251, 0.3);
+        }
+
+        .progress-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            width: 67%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .daily-tasks-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            background: #d4edda;
+        }
+
+        .task-icon {
+            font-size: 20px;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .task-subtitle {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .essentials-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .essential-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .essential-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 166, 251, 0.15);
+            border-color: #00A6FB;
+        }
+
+        .essential-card.cet46 {
+            border-left: 4px solid #2196F3;
+        }
+
+        .essential-card.business {
+            border-left: 4px solid #FF9800;
+        }
+
+        .essential-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .essential-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .essential-progress {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .essential-progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .essential-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00A6FB, #0D7377);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .essential-subtitle {
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        /* AI助手界面样式 */
+        .ai-chat-header {
+            background: linear-gradient(135deg, #00A6FB, #0D7377);
+            padding: 15px 20px;
+            color: white;
+        }
+
+        .ai-header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ai-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-info {
+            flex: 1;
+        }
+
+        .ai-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .ai-status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .ai-context-banner {
+            background: rgba(0, 166, 251, 0.1);
+            padding: 12px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .context-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #0D7377;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            max-width: 250px;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .ai-message .message-bubble {
+            background: #f1f3f4;
+            color: #2d3748;
+            border-bottom-left-radius: 6px;
+        }
+
+        .user-message .message-bubble {
+            background: #00A6FB;
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .ai-avatar-msg {
+            background: #e2e8f0;
+        }
+
+        .user-avatar-msg {
+            background: #00A6FB;
+            color: white;
+        }
+
+        .message-feedback {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 166, 251, 0.1);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #0D7377;
+        }
+
+        .feedback-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ai-suggestions {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .suggestion-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2E7D32;
+            margin-bottom: 6px;
+        }
+
+        .suggestion-text {
+            font-size: 11px;
+            color: #388E3C;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: #fff;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-text-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .chat-text-input:focus {
+            border-color: #00A6FB;
+        }
+
+        .input-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #00A6FB;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .input-button:hover {
+            background: #0D7377;
+            transform: scale(1.05);
+        }
+
+        .input-button.recording {
+            background: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* 必会词汇页面样式 */
+        .vocab-header {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .vocab-progress-info {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .vocab-group-info {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .vocab-card {
+            background: #fff;
+            margin: 20px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .vocab-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            position: relative;
+        }
+
+        .essential-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #212529;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .vocab-content {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .vocab-word {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+
+        .vocab-pronunciation {
+            color: #6c757d;
+            font-size: 16px;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+
+        .vocab-definition {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .vocab-collocations {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .collocation-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .collocation-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .collocation-phrase {
+            font-weight: 500;
+            color: #00A6FB;
+        }
+
+        .collocation-meaning {
+            color: #6c757d;
+        }
+
+        .vocab-example {
+            background: #e3f2fd;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .example-label {
+            font-size: 12px;
+            color: #1976D2;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .example-text {
+            font-style: italic;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-size: 15px;
+        }
+
+        .example-translation {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .memory-tip {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .tip-label {
+            font-size: 12px;
+            color: #f57c00;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .tip-text {
+            font-size: 13px;
+            color: #ef6c00;
+        }
+
+        .vocab-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .know-button {
+            background: #48bb78;
+            color: white;
+        }
+
+        .dont-know-button {
+            background: #f56565;
+            color: white;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .vocab-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        /* 必会专题选择页面 */
+        .essentials-selector {
+            padding: 20px;
+        }
+
+        .category-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 166, 251, 0.15);
+            border-color: #00A6FB;
+        }
+
+        .category-card.popular::after {
+            content: "🔥 热门";
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            background: #ff4757;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .category-card {
+            position: relative;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .category-icon {
+            font-size: 24px;
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .category-stats {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .category-level {
+            font-size: 12px;
+            color: #0D7377;
+            font-weight: 500;
+        }
+
+        .quick-access {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-tag {
+            padding: 6px 12px;
+            background: #f8f9fa;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-tag:hover {
+            background: #00A6FB;
+            color: white;
+        }
+
+        /* AI评分页面样式 */
+        .scoring-interface {
+            padding: 20px;
+        }
+
+        .recording-area {
+            background: linear-gradient(135deg, #00A6FB, #0D7377);
+            color: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .recording-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .target-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-style: italic;
+        }
+
+        .recording-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .record-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            background: #dc3545;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .record-button.recording {
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); }
+            50% { box-shadow: 0 4px 25px rgba(220, 53, 69, 0.6); }
+            100% { box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); }
+        }
+
+        .waveform {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .wave-bars {
+            display: flex;
+            gap: 3px;
+            height: 100%;
+            align-items: center;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 2px;
+            animation: wave 1s infinite ease-in-out;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 40%, 100% { height: 8px; }
+            20% { height: 24px; }
+        }
+
+        .ai-score-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .score-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .overall-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #00A6FB;
+            margin-bottom: 8px;
+        }
+
+        .score-label {
+            font-size: 16px;
+            color: #6c757d;
+        }
+
+        .score-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .score-name {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .detailed-feedback {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .feedback-section {
+            margin-bottom: 20px;
+        }
+
+        .feedback-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .word-feedback {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .word-info {
+            flex: 1;
+        }
+
+        .word-text {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .word-pronunciation {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+        .word-score {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .score-excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .score-good {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .score-needs-work {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 响应式和动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            transition: opacity 0.2s;
+        }
+
+        .back-button:hover {
+            opacity: 0.7;
+        }
+
+        /* 新增样式 */
+        .ai-thinking {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+
+        .thinking-dots {
+            display: inline-block;
+        }
+
+        .thinking-dots::after {
+            content: '...';
+            animation: thinking 1.5s infinite;
+        }
+
+        @keyframes thinking {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="phone-screen">
+            <!-- 欢迎页面 -->
+            <div class="screen active" id="welcome-screen">
+                <div class="welcome-screen">
+                    <div class="logo">🤖💬</div>
+                    <div class="app-name">ChatLingo</div>
+                    <div class="version-badge">2.0 AI增强版</div>
+                    <div class="tagline">必会专题 + AI智能助手</div>
+                    
+                    <div class="features">
+                        <div class="feature-item">必会专题分类学习</div>
+                        <div class="feature-item">AI智能对话练习</div>
+                        <div class="feature-item">实时语音评分系统</div>
+                        <div class="feature-item">个性化学习推荐</div>
+                    </div>
+                    
+                    <button class="start-button" onclick="showScreen('dashboard')">
+                        开启必会学习之旅 →
+                    </button>
+                </div>
+            </div>
+
+            <!-- 主页Dashboard -->
+            <div class="screen" id="dashboard">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>🔋100%</span>
+                </div>
+                
+                <div class="header">
+                    <span>📚 ChatLingo</span>
+                    <span>🔔</span>
+                </div>
+                
+                <div class="content dashboard-content">
+                    <div class="greeting fade-in">早上好, Lisa! 👋</div>
+                    
+                    <!-- 必会学习进度卡片 -->
+                    <div class="essential-progress-card fade-in">
+                        <div class="progress-title">
+                            🎯 四六级必会进度
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <div style="text-align: center; margin-bottom: 15px; font-size: 14px;">
+                            67% 完成 | 还需 45天
+                        </div>
+                        
+                        <div class="progress-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">3024</div>
+                                <div class="stat-label">必背词汇</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">67</div>
+                                <div class="stat-label">必背短文</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">134</div>
+                                <div class="stat-label">必背对话</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">15</div>
+                                <div class="stat-label">连续天数</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 今日必会任务 -->
+                    <div class="daily-tasks-card fade-in">
+                        <div class="card-title">
+                            🎯 今日必会任务
+                        </div>
+                        <div class="task-item completed" onclick="showTaskFeedback()">
+                            <div class="task-icon">✅</div>
+                            <div class="task-content">
+                                <div class="task-title">背诵20个新词汇</div>
+                                <div class="task-subtitle">已完成，获得50金币</div>
+                            </div>
+                        </div>
+                        <div class="task-item" onclick="showScreen('ai-chat')">
+                            <div class="task-icon">🤖</div>
+                            <div class="task-content">
+                                <div class="task-title">AI对话练习</div>
+                                <div class="task-subtitle">练习今日词汇，15分钟</div>
+                            </div>
+                        </div>
+                        <div class="task-item">
+                            <div class="task-icon">📖</div>
+                            <div class="task-content">
+                                <div class="task-title">复习昨日短文</div>
+                                <div class="task-subtitle">《College Life》，5分钟</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 必会专题 -->
+                    <div class="card-title">
+                        📚 我的必会专题
+                    </div>
+                    <div class="essentials-grid fade-in">
+                        <div class="essential-card cet46" onclick="showScreen('essentials-selector')">
+                            <div class="essential-icon">🏛️</div>
+                            <div class="essential-title">四六级必会</div>
+                            <div class="essential-progress">3225/4800 项目</div>
+                            <div class="essential-progress-bar">
+                                <div class="essential-progress-fill" style="width: 67%;"></div>
+                            </div>
+                            <div class="essential-subtitle">B1-B2 水平</div>
+                        </div>
+                        
+                        <div class="essential-card business" onclick="showScreen('essentials-selector')">
+                            <div class="essential-icon">💼</div>
+                            <div class="essential-title">商务必会</div>
+                            <div class="essential-progress">320/2000 项目</div>
+                            <div class="essential-progress-bar">
+                                <div class="essential-progress-fill" style="width: 16%;"></div>
+                            </div>
+                            <div class="essential-subtitle">职场英语</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item active" onclick="showScreen('dashboard')">
+                        <div>🏠</div>
+                        <div>首页</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('essentials-selector')">
+                        <div>📚</div>
+                        <div>必会</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('ai-chat')">
+                        <div>🤖</div>
+                        <div>AI助手</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('profile')">
+                        <div>👤</div>
+                        <div>我的</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 必会专题选择页面 -->
+            <div class="screen" id="essentials-selector">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>🔋100%</span>
+                </div>
+                
+                <div class="header">
+                    <button class="back-button" onclick="showScreen('dashboard')">←</button>
+                    <span>选择必会专题</span>
+                    <span>🔍</span>
+                </div>
+                
+                <div class="content essentials-selector">
+                    <!-- 按学习阶段分类 -->
+                    <div class="category-section">
+                        <div class="section-title">
+                            🎯 按学习阶段选择
+                        </div>
+                        
+                        <div class="category-card" onclick="showScreen('vocab-learning')">
+                            <div class="category-header">
+                                <div class="category-icon">🎒</div>
+                                <div>
+                                    <div class="category-title">初中必会</div>
+                                    <div class="category-stats">1500词汇 | 50短文 | 30对话</div>
+                                </div>
+                            </div>
+                            <div class="category-level">适合 A1-A2 水平 | 13-16岁</div>
+                        </div>
+                        
+                        <div class="category-card" onclick="showScreen('vocab-learning')">
+                            <div class="category-header">
+                                <div class="category-icon">🎓</div>
+                                <div>
+                                    <div class="category-title">高中必会</div>
+                                    <div class="category-stats">3500词汇 | 100短文 | 50对话</div>
+                                </div>
+                            </div>
+                            <div class="category-level">适合 A2-B1 水平 | 16-18岁</div>
+                        </div>
+                        
+                        <div class="category-card popular" onclick="showScreen('vocab-learning')">
+                            <div class="category-header">
+                                <div class="category-icon">🏛️</div>
+                                <div>
+                                    <div class="category-title">四六级必会</div>
+                                    <div class="category-stats">6000词汇 | 200短文 | 150对话</div>
+                                </div>
+                            </div>
+                            <div class="category-level">适合 B1-B2 水平 | 18-25岁</div>
+                        </div>
+                        
+                        <div class="category-card" onclick="showScreen('vocab-learning')">
+                            <div class="category-header">
+                                <div class="category-icon">🎯</div>
+                                <div>
+                                    <div class="category-title">考研必会</div>
+                                    <div class="category-stats">5500词汇 | 200短文 | 80对话</div>
+                                </div>
+                            </div>
+                            <div class="category-level">适合 B2-C1 水平 | 22-28岁</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 按应用场景分类 -->
+                    <div class="category-section">
+                        <div class="section-title">
+                            💼 按应用场景选择
+                        </div>
+                        
+                        <div class="quick-access">
+                            <div class="quick-tag" onclick="showScreen('vocab-learning')">商务英语</div>
+                            <div class="quick-tag" onclick="showScreen('vocab-learning')">旅游英语</div>
+                            <div class="quick-tag" onclick="showScreen('vocab-learning')">日常生活</div>
+                            <div class="quick-tag" onclick="showScreen('vocab-learning')">学术英语</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item" onclick="showScreen('dashboard')">
+                        <div>🏠</div>
+                        <div>首页</div>
+                    </div>
+                    <div class="nav-item active" onclick="showScreen('essentials-selector')">
+                        <div>📚</div>
+                        <div>必会</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('ai-chat')">
+                        <div>🤖</div>
+                        <div>AI助手</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('profile')">
+                        <div>👤</div>
+                        <div>我的</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 必背词汇学习页面 -->
+            <div class="screen" id="vocab-learning">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>🔋100%</span>
+                </div>
+                
+                <div class="vocab-header">
+                    <div class="vocab-progress-info">四六级必背词汇 3024/4500</div>
+                    <div class="vocab-group-info">第152组 - 高频动词</div>
+                    <div class="progress-bar" style="margin-top: 10px;">
+                        <div class="progress-fill" style="width: 80%;"></div>
+                    </div>
+                </div>
+                
+                <div class="content">
+                    <div class="vocab-card fade-in">
+                        <div class="vocab-image">
+                            🎯
+                            <div class="essential-badge">四级核心</div>
+                        </div>
+                        
+                        <div class="vocab-content">
+                            <div class="vocab-word">Accomplish</div>
+                            <div class="vocab-pronunciation">/əˈkʌmplɪʃ/</div>
+                            <div class="vocab-definition">v. 完成，实现，达到</div>
+                            
+                            <div class="vocab-collocations">
+                                <div class="collocation-title">🔥 必会搭配:</div>
+                                <div class="collocation-item">
+                                    <span class="collocation-phrase">accomplish a task</span>
+                                    <span class="collocation-meaning">完成任务</span>
+                                </div>
+                                <div class="collocation-item">
+                                    <span class="collocation-phrase">accomplish one's goal</span>
+                                    <span class="collocation-meaning">实现目标</span>
+                                </div>
+                            </div>
+                            
+                            <div class="vocab-example">
+                                <div class="example-label">📖 四六级真题例句:</div>
+                                <div class="example-text">"To accomplish this goal, we need to work together."</div>
+                                <div class="example-translation">要实现这个目标，我们需要合作。</div>
+                            </div>
+                            
+                            <div class="memory-tip">
+                                <div class="tip-label">💡 记忆技巧:</div>
+                                <div class="tip-text">ac(加强) + com(一起) + plish(完成) = 一起完成</div>
+                            </div>
+                            
+                            <div class="vocab-actions">
+                                <button class="action-button know-button" onclick="nextVocab()">
+                                    掌握了 ✅
+                                </button>
+                                <button class="action-button dont-know-button" onclick="nextVocab()">
+                                    再练练 🔄
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="vocab-navigation">
+                            <span>上一个: abandon</span>
+                            <span>16/20</span>
+                            <span>下一个: achieve</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI助手对话页面 -->
+            <div class="screen" id="ai-chat">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>🔋100%</span>
+                </div>
+                
+                <div class="ai-chat-header">
+                    <button class="back-button" onclick="showScreen('dashboard')">←</button>
+                    <div class="ai-header-content">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-info">
+                            <div class="ai-name">Lingo AI助手</div>
+                            <div class="ai-status">在线 · 专业英语老师</div>
+                        </div>
+                    </div>
+                    <span>⚙️</span>
+                </div>
+                
+                <div class="ai-context-banner">
+                    <div class="context-info">
+                        📚 练习模式: 四六级必背词汇 | 目标: 使用5个新词汇
+                    </div>
+                </div>
+                
+                <div class="messages" id="ai-messages">
+                    <div class="message ai-message fade-in">
+                        <div class="message-avatar ai-avatar-msg">🤖</div>
+                        <div class="message-bubble">
+                            Hi! I'm your AI English tutor. Let's practice using today's essential vocabulary: "accomplish", "achieve", "complete", "realize", and "fulfill". 
+                            
+                            Can you tell me about a goal you want to accomplish this semester? 😊
+                        </div>
+                    </div>
+                    
+                    <div class="message user-message fade-in">
+                        <div class="message-avatar user-avatar-msg">👤</div>
+                        <div class="message-bubble">
+                            I want to accomplish my English learning goals this semester. I hope to achieve a high score in CET-6.
+                        </div>
+                        <div class="message-feedback">
+                            <div class="feedback-title">✅ AI反馈:</div>
+                            Excellent! You used "accomplish" and "achieve" perfectly. These are both essential CET vocabulary words.
+                        </div>
+                    </div>
+                    
+                    <div class="message ai-message fade-in">
+                        <div class="message-avatar ai-avatar-msg">🤖</div>
+                        <div class="message-bubble">
+                            That's a fantastic goal! 🎯 What specific tasks do you need to complete to achieve this? And how will you realize your study plan?
+                            
+                            <div class="ai-suggestions">
+                                <div class="suggestion-title">💡 AI建议:</div>
+                                <div class="suggestion-text">尝试用 "complete", "realize" 或 "fulfill" 来回答这个问题</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-thinking" id="ai-thinking" style="display: none;">
+                        <div class="message-avatar ai-avatar-msg">🤖</div>
+                        <span>AI正在思考<span class="thinking-dots"></span></span>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <div class="input-container">
+                        <input type="text" class="chat-text-input" placeholder="输入你的回答..." id="ai-chat-input">
+                        <button class="input-button" onclick="toggleRecording()" id="record-btn">🎤</button>
+                        <button class="input-button" onclick="sendAIMessage()">➤</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI语音评分页面 -->
+            <div class="screen" id="ai-scoring">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>🔋100%</span>
+                </div>
+                
+                <div class="header">
+                    <button class="back-button" onclick="showScreen('ai-chat')">←</button>
+                    <span>AI语音评分</span>
+                    <span>🎙️</span>
+                </div>
+                
+                <div class="content scoring-interface">
+                    <div class="recording-area">
+                        <div class="recording-title">📖 朗读练习</div>
+                        <div class="target-text">
+                            "To accomplish this goal, we need to work together and complete all the necessary tasks."
+                        </div>
+                        
+                        <div class="recording-controls">
+                            <button class="record-button" onclick="startRecording()" id="main-record-btn">🎤</button>
+                        </div>
+                        
+                        <div class="waveform" id="waveform" style="display: none;">
+                            <div class="wave-bars">
+                                <div class="wave-bar" style="height: 12px;"></div>
+                                <div class="wave-bar" style="height: 20px;"></div>
+                                <div class="wave-bar" style="height: 16px;"></div>
+                                <div class="wave-bar" style="height: 24px;"></div>
+                                <div class="wave-bar" style="height: 18px;"></div>
+                                <div class="wave-bar" style="height: 14px;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size: 14px; opacity: 0.9; margin-top: 15px;">
+                            点击录音按钮开始朗读，AI将实时评分
+                        </div>
+                    </div>
+                    
+                    <div class="ai-score-card" id="score-result" style="display: none;">
+                        <div class="score-header">
+                            <div class="overall-score">87</div>
+                            <div class="score-label">综合评分</div>
+                        </div>
+                        
+                        <div class="score-breakdown">
+                            <div class="score-item">
+                                <div class="score-value">90</div>
+                                <div class="score-name">发音准确度</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">85</div>
+                                <div class="score-name">语音流利度</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">88</div>
+                                <div class="score-name">语调自然度</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">85</div>
+                                <div class="score-name">语速适中度</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detailed-feedback" id="detailed-feedback" style="display: none;">
+                        <div class="feedback-section">
+                            <div class="feedback-title">
+                                🔍 详细分析
+                            </div>
+                            
+                            <div class="word-feedback">
+                                <div class="word-info">
+                                    <div class="word-text">accomplish</div>
+                                    <div class="word-pronunciation">您的发音: /əˈkʌmplɪʃ/ ✅</div>
+                                </div>
+                                <div class="word-score score-excellent">95分</div>
+                            </div>
+                            
+                            <div class="word-feedback">
+                                <div class="word-info">
+                                    <div class="word-text">together</div>
+                                    <div class="word-pronunciation">建议练习: /təˈɡeðər/</div>
+                                </div>
+                                <div class="word-score score-needs-work">78分</div>
+                            </div>
+                            
+                            <div class="word-feedback">
+                                <div class="word-info">
+                                    <div class="word-text">complete</div>
+                                    <div class="word-pronunciation">发音标准 ✅</div>
+                                </div>
+                                <div class="word-score score-good">88分</div>
+                            </div>
+                        </div>
+                        
+                        <div class="feedback-section">
+                            <div class="feedback-title">
+                                💡 改进建议
+                            </div>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; font-size: 14px; color: #2d3748;">
+                                • "together" 中的 "th" 音需要加强练习<br>
+                                • 语调在句末可以更自然一些<br>
+                                • 整体表现很好，继续保持！
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 个人中心页面（保持原有设计但增加AI统计） -->
+            <div class="screen" id="profile">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>🔋100%</span>
+                </div>
+                
+                <div class="header">
+                    <span></span>
+                    <span>我的</span>
+                    <span>⚙️</span>
+                </div>
+                
+                <div class="content" style="padding: 20px;">
+                    <div class="fade-in" style="text-align: center; margin-bottom: 30px;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #00A6FB, #0D7377); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; font-weight: bold;">L</div>
+                        <div style="font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #2d3748;">Lisa Chen</div>
+                        <div style="color: #6c757d; font-size: 14px;">四六级必会学习者 · B1+水平</div>
+                    </div>
+                    
+                    <!-- AI学习统计 -->
+                    <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">🤖 AI助手使用统计</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold;">48</div>
+                                <div style="font-size: 12px; opacity: 0.9;">AI对话次数</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; font-weight: bold;">87</div>
+                                <div style="font-size: 12px; opacity: 0.9;">平均语音评分</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px;">
+                        <div style="background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                            <div style="font-size: 24px; font-weight: bold; color: #00A6FB; margin-bottom: 5px;">15</div>
+                            <div style="font-size: 12px; color: #6c757d;">连续天数</div>
+                        </div>
+                        <div style="background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                            <div style="font-size: 24px; font-weight: bold; color: #00A6FB; margin-bottom: 5px;">3024</div>
+                            <div style="font-size: 12px; color: #6c757d;">掌握词汇</div>
+                        </div>
+                        <div style="background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                            <div style="font-size: 24px; font-weight: bold; color: #00A6FB; margin-bottom: 5px;">1580</div>
+                            <div style="font-size: 12px; color: #6c757d;">学习金币</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #2d3748;">必会成就 🏆</div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div style="background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                                <div style="font-size: 32px; margin-bottom: 8px;">📚</div>
+                                <div style="font-size: 12px; color: #4a5568;">词汇达人</div>
+                            </div>
+                            <div style="background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                                <div style="font-size: 32px; margin-bottom: 8px;">🗣️</div>
+                                <div style="font-size: 12px; color: #4a5568;">AI对话王</div>
+                            </div>
+                            <div style="background: #fff; padding: 20px 10px; border-radius: 12px; text-align: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                                <div style="font-size: 32px; margin-bottom: 8px;">🎯</div>
+                                <div style="font-size: 12px; color: #4a5568;">必会专家</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #2d3748;">📊 本月统计</div>
+                        <div style="background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                <span style="color: #6c757d;">必会内容学习</span>
+                                <span style="font-weight: 600;">435项</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                <span style="color: #6c757d;">AI对话练习</span>
+                                <span style="font-weight: 600;">28次</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #6c757d;">语音评分次数</span>
+                                <span style="font-weight: 600;">156次</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item" onclick="showScreen('dashboard')">
+                        <div>🏠</div>
+                        <div>首页</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('essentials-selector')">
+                        <div>📚</div>
+                        <div>必会</div>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('ai-chat')">
+                        <div>🤖</div>
+                        <div>AI助手</div>
+                    </div>
+                    <div class="nav-item active" onclick="showScreen('profile')">
+                        <div>👤</div>
+                        <div>我的</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isRecording = false;
+        let aiMessageCount = 0;
+
+        function showScreen(screenId) {
+            // 隐藏所有屏幕
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            
+            // 显示目标屏幕
+            document.getElementById(screenId).classList.add('active');
+            
+            // 更新导航状态
+            updateNavigation(screenId);
+            
+            // 添加动画效果
+            const activeScreen = document.getElementById(screenId);
+            activeScreen.style.animation = 'fadeIn 0.3s ease-out';
+        }
+
+        function updateNavigation(activeScreen) {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            // 根据屏幕ID激活对应的导航项
+            const navMap = {
+                'dashboard': 0,
+                'essentials-selector': 1,
+                'ai-chat': 2,
+                'profile': 3
+            };
+            
+            if (navMap[activeScreen] !== undefined) {
+                const navContainers = document.querySelectorAll('.bottom-nav');
+                navContainers.forEach(container => {
+                    const items = container.querySelectorAll('.nav-item');
+                    if (items[navMap[activeScreen]]) {
+                        items[navMap[activeScreen]].classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const messagesContainer = document.getElementById('ai-messages');
+            
+            if (input.value.trim()) {
+                // 添加用户消息
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message fade-in';
+                userMessage.innerHTML = `
+                    <div class="message-avatar user-avatar-msg">👤</div>
+                    <div class="message-bubble">${input.value}</div>
+                `;
+                messagesContainer.appendChild(userMessage);
+                
+                // 显示AI思考状态
+                document.getElementById('ai-thinking').style.display = 'flex';
+                
+                // 清空输入框
+                input.value = '';
+                
+                // 模拟AI回复
+                setTimeout(() => {
+                    document.getElementById('ai-thinking').style.display = 'none';
+                    
+                    const responses = [
+                        {
+                            text: "Excellent! You're using the essential vocabulary perfectly. I can see you want to complete your daily practice and fulfill your learning goals. 🎯",
+                            feedback: "✅ 太棒了！你正确使用了3个必会词汇：complete, fulfill, goals"
+                        },
+                        {
+                            text: "Great progress! Let's try using 'realize' in your next sentence. How will you realize your English improvement? 💪",
+                            feedback: "✨ 语法完美！尝试在下一句中使用 'realize' 这个必会词汇"
+                        },
+                        {
+                            text: "Perfect! You've successfully used 4 out of 5 target words. One more to go - can you use 'accomplish' to tell me about your biggest achievement? 🌟",
+                            feedback: "🎉 已完成80%目标！再用一个'accomplish'就完美了"
+                        }
+                    ];
+                    
+                    const response = responses[aiMessageCount % responses.length];
+                    aiMessageCount++;
+                    
+                    const aiMessage = document.createElement('div');
+                    aiMessage.className = 'message ai-message fade-in';
+                    aiMessage.innerHTML = `
+                        <div class="message-avatar ai-avatar-msg">🤖</div>
+                        <div class="message-bubble">
+                            ${response.text}
+                            <div class="ai-suggestions">
+                                <div class="suggestion-title">💡 AI学习建议:</div>
+                                <div class="suggestion-text">${response.feedback}</div>
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(aiMessage);
+                    
+                    // 滚动到底部
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 2000);
+                
+                // 滚动到底部
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        function toggleRecording() {
+            const recordBtn = document.getElementById('record-btn');
+            
+            if (!isRecording) {
+                // 开始录音
+                isRecording = true;
+                recordBtn.classList.add('recording');
+                recordBtn.innerHTML = '⏹️';
+                
+                // 3秒后自动停止并跳转到评分页面
+                setTimeout(() => {
+                    isRecording = false;
+                    recordBtn.classList.remove('recording');
+                    recordBtn.innerHTML = '🎤';
+                    
+                    // 显示录音完成提示
+                    const messagesContainer = document.getElementById('ai-messages');
+                    const feedback = document.createElement('div');
+                    feedback.className = 'message ai-message fade-in';
+                    feedback.innerHTML = `
+                        <div class="message-avatar ai-avatar-msg">🤖</div>
+                        <div class="message-bubble">
+                            Great recording! 🎙️ Let me analyze your pronunciation...
+                            <div style="margin-top: 10px; padding: 10px; background: rgba(0,166,251,0.1); border-radius: 8px; cursor: pointer;" onclick="showScreen('ai-scoring')">
+                                🎯 点击查看AI语音评分详情
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(feedback);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 3000);
+                
+            } else {
+                // 停止录音
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '🎤';
+            }
+        }
+
+        function startRecording() {
+            const recordBtn = document.getElementById('main-record-btn');
+            const waveform = document.getElementById('waveform');
+            
+            if (!isRecording) {
+                isRecording = true;
+                recordBtn.classList.add('recording');
+                waveform.style.display = 'block';
+                
+                // 3秒后停止录音并显示评分
+                setTimeout(() => {
+                    isRecording = false;
+                    recordBtn.classList.remove('recording');
+                    waveform.style.display = 'none';
+                    
+                    // 显示评分结果
+                    document.getElementById('score-result').style.display = 'block';
+                    document.getElementById('detailed-feedback').style.display = 'block';
+                }, 3000);
+            }
+        }
+
+        function nextVocab() {
+            const vocabWords = [
+                {
+                    word: "Achieve",
+                    pronunciation: "/əˈtʃiːv/",
+                    definition: "v. 实现，获得，达到",
+                    emoji: "🏆",
+                    badge: "四级核心",
+                    collocations: [
+                        { phrase: "achieve success", meaning: "获得成功" },
+                        { phrase: "achieve one's dream", meaning: "实现梦想" }
+                    ],
+                    example: "Hard work helps you achieve your goals.",
+                    translation: "努力工作帮助你实现目标。",
+                    tip: "a(朝向) + chieve(完成) = 朝着目标完成"
+                },
+                {
+                    word: "Complete",
+                    pronunciation: "/kəmˈpliːt/",
+                    definition: "v. 完成，结束；adj. 完整的",
+                    emoji: "✅",
+                    badge: "高频词汇",
+                    collocations: [
+                        { phrase: "complete a project", meaning: "完成项目" },
+                        { phrase: "complete the task", meaning: "完成任务" }
+                    ],
+                    example: "Please complete your homework before class.",
+                    translation: "请在上课前完成你的作业。",
+                    tip: "com(完全) + plete(填满) = 完全填满"
+                },
+                {
+                    word: "Realize",
+                    pronunciation: "/ˈriːəlaɪz/",
+                    definition: "v. 意识到，实现，理解",
+                    emoji: "💡",
+                    badge: "六级核心", 
+                    collocations: [
+                        { phrase: "realize the importance", meaning: "意识到重要性" },
+                        { phrase: "realize one's potential", meaning: "发挥潜力" }
+                    ],
+                    example: "I suddenly realized what she meant.",
+                    translation: "我突然明白了她的意思。",
+                    tip: "real(真实) + ize(使...) = 使变真实"
+                }
+            ];
+            
+            const randomVocab = vocabWords[Math.floor(Math.random() * vocabWords.length)];
+            const vocabCard = document.querySelector('.vocab-card');
+            
+            // 添加退场动画
+            vocabCard.style.animation = 'fadeIn 0.3s ease-out reverse';
+            
+            setTimeout(() => {
+                // 更新内容
+                vocabCard.innerHTML = `
+                    <div class="vocab-image">
+                        ${randomVocab.emoji}
+                        <div class="essential-badge">${randomVocab.badge}</div>
+                    </div>
+                    <div class="vocab-content">
+                        <div class="vocab-word">${randomVocab.word}</div>
+                        <div class="vocab-pronunciation">${randomVocab.pronunciation}</div>
+                        <div class="vocab-definition">${randomVocab.definition}</div>
+                        
+                        <div class="vocab-collocations">
+                            <div class="collocation-title">🔥 必会搭配:</div>
+                            ${randomVocab.collocations.map(col => `
+                                <div class="collocation-item">
+                                    <span class="collocation-phrase">${col.phrase}</span>
+                                    <span class="collocation-meaning">${col.meaning}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="vocab-example">
+                            <div class="example-label">📖 四六级真题例句:</div>
+                            <div class="example-text">${randomVocab.example}</div>
+                            <div class="example-translation">${randomVocab.translation}</div>
+                        </div>
+                        
+                        <div class="memory-tip">
+                            <div class="tip-label">💡 记忆技巧:</div>
+                            <div class="tip-text">${randomVocab.tip}</div>
+                        </div>
+                        
+                        <div class="vocab-actions">
+                            <button class="action-button know-button" onclick="nextVocab()">
+                                掌握了 ✅
+                            </button>
+                            <button class="action-button dont-know-button" onclick="nextVocab()">
+                                再练练 🔄
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="vocab-navigation">
+                        <span>上一个: accomplish</span>
+                        <span>17/20</span>
+                        <span>下一个: ${randomVocab.word.toLowerCase()}</span>
+                    </div>
+                `;
+                
+                // 添加入场动画
+                vocabCard.style.animation = 'fadeIn 0.3s ease-out';
+            }, 150);
+        }
+
+        function showTaskFeedback() {
+            alert('🎉 恭喜完成今日词汇任务！\n\n📊 学习统计:\n• 用时: 18分钟\n• 准确率: 95%\n• 获得金币: +50\n\n继续保持，明天见！');
+        }
+
+        // 回车发送消息
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('ai-chat-input') === document.activeElement) {
+                sendAIMessage();
+            }
+        });
+
+        // 初始化动画
+        document.addEventListener('DOMContentLoaded', function() {
+            // 进度条动画
+            setTimeout(() => {
+                const progressFills = document.querySelectorAll('.progress-fill');
+                progressFills.forEach(fill => {
+                    fill.style.width = '67%';
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html>
