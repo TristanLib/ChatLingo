@@ -1,0 +1,677 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================================================
+// Core Models
+// ================================================================
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  username  String   @unique
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
+  password  String
+  
+  // Profile information
+  profileImage String? @map("profile_image")
+  bio          String?
+  learningGoal String? @map("learning_goal")
+  
+  // Account status
+  isActive    Boolean  @default(true) @map("is_active")
+  isVerified  Boolean  @default(false) @map("is_verified")
+  
+  // Subscription info
+  subscriptionTier String? @map("subscription_tier") // free, basic, premium
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
+  
+  // Authentication
+  refreshToken String? @map("refresh_token")
+  emailVerificationToken String? @map("email_verification_token")
+  passwordResetToken String? @map("password_reset_token")
+  passwordResetExpires DateTime? @map("password_reset_expires")
+  
+  // Metadata
+  lastLoginAt DateTime? @map("last_login_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  essentialProgress UserEssentialProgress[]
+  contentProgress   UserContentProgress[]
+  aiConversations   AiConversation[]
+  aiAssessments     AiAssessment[]
+  aiRecommendations AiRecommendation[]
+  behaviorLogs      LearningBehaviorLog[]
+  analytics         LearningAnalytics[]
+
+  @@map("users")
+}
+
+model AppConfig {
+  id          String   @id @default(uuid()) @db.Uuid
+  configKey   String   @unique @map("config_key")
+  configValue String   @map("config_value")
+  description String?
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("app_configs")
+}
+
+// ================================================================
+// Essential Learning System
+// ================================================================
+
+enum EssentialCategory {
+  junior_high
+  senior_high
+  cet4
+  cet6
+  postgraduate
+  daily_life
+  business
+  travel
+  academic
+  ielts
+  toefl
+
+  @@map("essential_category")
+}
+
+enum EssentialContentType {
+  vocabulary
+  passages
+  dialogues
+  grammar
+  writing_templates
+  listening_exercises
+  pronunciation_drills
+
+  @@map("essential_content_type")
+}
+
+enum MasteryLevel {
+  unknown
+  learning
+  familiar
+  mastered
+  expert
+
+  @@map("mastery_level")
+}
+
+enum ContentDifficulty {
+  beginner
+  elementary
+  intermediate
+  upper_intermediate
+  advanced
+
+  @@map("content_difficulty")
+}
+
+model EssentialCategories {
+  id          String   @id @default(uuid()) @db.Uuid
+  categoryKey EssentialCategory @unique @map("category_key")
+  name        String
+  displayNameCn String @map("display_name_cn")
+  displayNameEn String @map("display_name_en")
+  description String?
+  
+  // Category characteristics
+  targetLevel String @map("target_level")
+  ageGroup    String? @map("age_group")
+  difficultyColor String? @map("difficulty_color")
+  iconUrl     String? @map("icon_url")
+  backgroundImageUrl String? @map("background_image_url")
+  
+  // Content statistics
+  totalVocabularyCount Int @default(0) @map("total_vocabulary_count")
+  totalPassagesCount   Int @default(0) @map("total_passages_count")
+  totalDialoguesCount  Int @default(0) @map("total_dialogues_count")
+  totalGrammarPoints   Int @default(0) @map("total_grammar_points")
+  
+  // Learning estimates
+  estimatedDurationDays Int? @map("estimated_duration_days")
+  estimatedDailyMinutes Int @default(30) @map("estimated_daily_minutes")
+  
+  // System info
+  sortOrder Int @default(0) @map("sort_order")
+  isPopular Boolean @default(false) @map("is_popular")
+  isActive  Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contents EssentialContent[]
+  userProgress UserEssentialProgress[]
+
+  @@map("essential_categories")
+}
+
+model EssentialContent {
+  id          String   @id @default(uuid()) @db.Uuid
+  categoryId  String   @map("category_id") @db.Uuid
+  
+  // Content basic info
+  contentType EssentialContentType @map("content_type")
+  title       String
+  subtitle    String?
+  contentKey  String? @map("content_key")
+  
+  // Content body
+  contentData Json @map("content_data")
+  metadata    Json?
+  
+  // Classification
+  difficultyLevel ContentDifficulty @map("difficulty_level")
+  subCategory     String? @map("sub_category")
+  tags            String[] @default([])
+  
+  // Learning related
+  estimatedLearnTime Int? @map("estimated_learn_time")
+  frequencyRank      Int? @map("frequency_rank")
+  importanceScore    Int @default(50) @map("importance_score")
+  
+  // Relations
+  prerequisiteContentIds String[] @map("prerequisite_content_ids") @db.Uuid
+  relatedContentIds      String[] @map("related_content_ids") @db.Uuid
+  
+  // Media resources
+  audioUrl String? @map("audio_url")
+  imageUrl String? @map("image_url")
+  videoUrl String? @map("video_url")
+  
+  // AI enhancement
+  aiGeneratedExamples   Json? @map("ai_generated_examples")
+  aiDifficultyPrediction Decimal? @map("ai_difficulty_prediction") @db.Decimal(3,2)
+  // Note: Prisma doesn't support vector types yet, will need raw SQL for embeddings
+  
+  // Statistics
+  totalLearners   Int @default(0) @map("total_learners")
+  completionRate  Decimal @default(0) @map("completion_rate") @db.Decimal(5,2)
+  averageRating   Decimal @default(0) @map("average_rating") @db.Decimal(3,2)
+  
+  // System fields
+  createdBy   String? @map("created_by") @db.Uuid
+  isPublished Boolean @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category        EssentialCategories @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  vocabulary      EssentialVocabulary?
+  passages        EssentialPassage?
+  dialogues       EssentialDialogue?
+  userProgress    UserContentProgress[]
+
+  @@map("essential_contents")
+}
+
+model EssentialVocabulary {
+  id        String @id @default(uuid()) @db.Uuid
+  contentId String @unique @map("content_id") @db.Uuid
+  
+  // Vocabulary basic info
+  word            String @unique
+  pronunciation   String?
+  pronunciationUs String? @map("pronunciation_us")
+  pronunciationUk String? @map("pronunciation_uk")
+  wordClass       String? @map("word_class")
+  
+  // Word forms
+  wordForms Json? @map("word_forms")
+  rootWord  String? @map("root_word")
+  prefix    String?
+  suffix    String?
+  wordFamily String[] @map("word_family")
+  
+  // Meanings
+  definitions      Json @map("definitions")
+  chineseMeanings  String[] @map("chinese_meanings")
+  synonyms         String[]
+  antonyms         String[]
+  
+  // Collocations and usage
+  collocations Json? @map("collocations")
+  phrases      Json? @map("phrases")
+  usageNotes   String? @map("usage_notes")
+  
+  // Memory aids
+  memoryTips String? @map("memory_tips")
+  mnemonics  String?
+  etymology  String?
+  
+  // Frequency and importance
+  frequencyRank Int? @map("frequency_rank")
+  cefrLevel     String? @map("cefr_level")
+  examFrequency Json? @map("exam_frequency")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  content EssentialContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("essential_vocabulary")
+}
+
+model EssentialPassage {
+  id        String @id @default(uuid()) @db.Uuid
+  contentId String @unique @map("content_id") @db.Uuid
+  
+  // Passage info
+  passageType        String @map("passage_type")
+  wordCount          Int? @map("word_count")
+  readingTimeEstimate Int? @map("reading_time_estimate")
+  
+  // Content analysis
+  keyVocabulary   String[] @map("key_vocabulary")
+  keyPhrases      String[] @map("key_phrases")
+  grammarPoints   String[] @map("grammar_points")
+  topicKeywords   String[] @map("topic_keywords")
+  
+  // Exercises
+  comprehensionQuestions Json? @map("comprehension_questions")
+  vocabularyExercises    Json? @map("vocabulary_exercises")
+  
+  // Audio info
+  audioDuration Int? @map("audio_duration")
+  speakerAccent String? @map("speaker_accent")
+  speakingSpeed String? @map("speaking_speed")
+  
+  // Analysis data
+  readabilityScore    Decimal? @map("readability_score") @db.Decimal(4,2)
+  complexityAnalysis  Json? @map("complexity_analysis")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  content EssentialContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("essential_passages")
+}
+
+model EssentialDialogue {
+  id        String @id @default(uuid()) @db.Uuid
+  contentId String @unique @map("content_id") @db.Uuid
+  
+  // Dialogue info
+  scenario         String
+  participantCount Int @default(2) @map("participant_count")
+  dialogueTurns    Int? @map("dialogue_turns")
+  totalDuration    Int? @map("total_duration")
+  
+  // Dialogue structure
+  dialogueStructure Json @map("dialogue_structure")
+  roleDescriptions  Json? @map("role_descriptions")
+  
+  // Language features
+  register      String?
+  functionFocus String[] @map("function_focus")
+  culturalNotes String? @map("cultural_notes")
+  
+  // Practice settings
+  practiceModes           String[] @map("practice_modes")
+  aiConversationEnabled   Boolean @default(true) @map("ai_conversation_enabled")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  content EssentialContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("essential_dialogues")
+}
+
+// ================================================================
+// User Progress Tracking
+// ================================================================
+
+model UserEssentialProgress {
+  id         String @id @default(uuid()) @db.Uuid
+  userId     String @map("user_id") @db.Uuid
+  categoryId String @map("category_id") @db.Uuid
+  
+  // Overall progress
+  totalItems          Int @default(0) @map("total_items")
+  completedItems      Int @default(0) @map("completed_items")
+  masteredItems       Int @default(0) @map("mastered_items")
+  completionPercentage Decimal @default(0) @map("completion_percentage") @db.Decimal(5,2)
+  
+  // Category progress
+  vocabularyProgress Json? @map("vocabulary_progress")
+  passagesProgress   Json? @map("passages_progress")
+  dialoguesProgress  Json? @map("dialogues_progress")
+  
+  // Learning statistics
+  totalStudyTime    Int @default(0) @map("total_study_time")
+  currentStreakDays Int @default(0) @map("current_streak_days")
+  longestStreakDays Int @default(0) @map("longest_streak_days")
+  
+  // Goal settings
+  dailyTarget             Int @default(50) @map("daily_target")
+  targetCompletionDate    DateTime? @map("target_completion_date")
+  
+  // Time records
+  startedAt               DateTime @default(now()) @map("started_at")
+  lastStudiedAt           DateTime? @map("last_studied_at")
+  estimatedCompletionDate DateTime? @map("estimated_completion_date")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category EssentialCategories @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+  @@map("user_essential_progress")
+}
+
+model UserContentProgress {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  contentId String @map("content_id") @db.Uuid
+  
+  // Mastery status
+  masteryLevel     MasteryLevel @default(unknown) @map("mastery_level")
+  confidenceScore  Int @default(0) @map("confidence_score")
+  actualDifficulty Int @default(0) @map("actual_difficulty")
+  
+  // Learning records
+  firstStudiedAt   DateTime? @map("first_studied_at")
+  lastStudiedAt    DateTime? @map("last_studied_at")
+  studyCount       Int @default(0) @map("study_count")
+  totalStudyTime   Int @default(0) @map("total_study_time")
+  
+  // Review scheduling
+  nextReviewDate           DateTime? @map("next_review_date")
+  reviewIntervalHours      Int @default(24) @map("review_interval_hours")
+  consecutiveCorrectCount  Int @default(0) @map("consecutive_correct_count")
+  consecutiveWrongCount    Int @default(0) @map("consecutive_wrong_count")
+  
+  // Error tracking
+  mistakeLog   Json? @map("mistake_log")
+  commonErrors String[] @map("common_errors")
+  
+  // Personalized data
+  learningNotes    String? @map("learning_notes")
+  bookmarked       Boolean @default(false)
+  difficultyRating Int? @map("difficulty_rating")
+  
+  // AI analysis
+  aiSuggestedReviewTime DateTime? @map("ai_suggested_review_time")
+  aiDifficultyAdjustment Decimal? @map("ai_difficulty_adjustment") @db.Decimal(3,2)
+  aiLearningPattern     Json? @map("ai_learning_pattern")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content EssentialContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+  @@map("user_content_progress")
+}
+
+// ================================================================
+// AI Features
+// ================================================================
+
+enum AiFeedbackType {
+  grammar
+  vocabulary
+  pronunciation
+  fluency
+  coherence
+
+  @@map("ai_feedback_type")
+}
+
+model AiConversation {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  
+  // Conversation configuration
+  conversationType    String @map("conversation_type")
+  essentialCategory   EssentialCategory? @map("essential_category")
+  targetContentIds    String[] @map("target_content_ids") @db.Uuid
+  
+  // AI configuration
+  aiModel       String @default("gpt-4") @map("ai_model")
+  aiPersonality String @default("friendly_teacher") @map("ai_personality")
+  systemPrompt  String? @map("system_prompt")
+  
+  // Conversation goals
+  learningObjectives   String[] @map("learning_objectives")
+  targetVocabulary     String[] @map("target_vocabulary")
+  targetGrammarPoints  String[] @map("target_grammar_points")
+  
+  // Conversation status
+  status    String @default("active")
+  turnCount Int @default(0) @map("turn_count")
+  
+  // Time info
+  startedAt     DateTime @default(now()) @map("started_at")
+  endedAt       DateTime? @map("ended_at")
+  totalDuration Int? @map("total_duration")
+  
+  // Assessment results
+  overallScore     Int? @map("overall_score")
+  languageAccuracy Int? @map("language_accuracy")
+  vocabularyUsage  Int? @map("vocabulary_usage")
+  fluencyScore     Int? @map("fluency_score")
+  
+  // Feedback
+  aiFeedback              String? @map("ai_feedback")
+  improvementSuggestions  String[] @map("improvement_suggestions")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@map("ai_conversations")
+}
+
+model AiMessage {
+  id             String @id @default(uuid()) @db.Uuid
+  conversationId String @map("conversation_id") @db.Uuid
+  
+  // Message basic info
+  senderType   String @map("sender_type")
+  messageOrder Int @map("message_order")
+  messageText  String? @map("message_text")
+  
+  // Audio message
+  audioUrl              String? @map("audio_url")
+  audioDuration         Decimal? @map("audio_duration") @db.Decimal(5,2)
+  transcription         String?
+  transcriptionConfidence Decimal? @map("transcription_confidence") @db.Decimal(3,2)
+  
+  // Language analysis (user messages)
+  grammarAnalysis       Json? @map("grammar_analysis")
+  vocabularyAnalysis    Json? @map("vocabulary_analysis")
+  pronunciationAnalysis Json? @map("pronunciation_analysis")
+  
+  // AI response analysis
+  aiIntent         String? @map("ai_intent")
+  teachingPoints   String[] @map("teaching_points")
+  correctionsMade  Json? @map("corrections_made")
+  
+  // Essential content related
+  essentialWordsUsed    String[] @map("essential_words_used")
+  essentialPatternsUsed String[] @map("essential_patterns_used")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("ai_messages")
+}
+
+model AiAssessment {
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @map("user_id") @db.Uuid
+  contentId String? @map("content_id") @db.Uuid
+  
+  // Assessment type
+  assessmentType    String @map("assessment_type")
+  assessmentContext Json? @map("assessment_context")
+  
+  // Input data
+  inputData     Json? @map("input_data")
+  targetContent String? @map("target_content")
+  
+  // Scoring results
+  overallScore   Int @map("overall_score")
+  detailedScores Json? @map("detailed_scores")
+  
+  // Feedback
+  strengths             String[] @map("strengths")
+  weaknesses            String[] @map("weaknesses")
+  specificFeedback      Json? @map("specific_feedback")
+  improvementSuggestions String[] @map("improvement_suggestions")
+  
+  // AI processing info
+  aiModel        String @map("ai_model")
+  processingTime Int? @map("processing_time")
+  confidenceScore Decimal? @map("confidence_score") @db.Decimal(3,2)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_assessments")
+}
+
+model AiRecommendation {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  
+  // Recommendation type
+  recommendationType    String @map("recommendation_type")
+  recommendationContext Json? @map("recommendation_context")
+  
+  // Recommendation content
+  recommendedItems Json @map("recommended_items")
+  reasoning        Json? @map("reasoning")
+  priorityScore    Int @map("priority_score")
+  
+  // Status tracking
+  status       String @default("pending")
+  userFeedback Int? @map("user_feedback")
+  
+  // Validity
+  validFrom  DateTime @default(now()) @map("valid_from")
+  validUntil DateTime? @map("valid_until")
+  
+  // AI model info
+  aiModel      String @map("ai_model")
+  modelVersion String? @map("model_version")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_recommendations")
+}
+
+// ================================================================
+// Learning Analytics
+// ================================================================
+
+model LearningBehaviorLog {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  
+  // Behavior basic info
+  behaviorType    String @map("behavior_type")
+  behaviorContext Json? @map("behavior_context")
+  
+  // Related content
+  essentialCategory EssentialCategory? @map("essential_category")
+  contentId         String? @map("content_id") @db.Uuid
+  
+  // Behavior data
+  durationSeconds     Int? @map("duration_seconds")
+  resultData          Json? @map("result_data")
+  performanceMetrics  Json? @map("performance_metrics")
+  
+  // Environment info
+  deviceInfo     Json? @map("device_info")
+  networkQuality String? @map("network_quality")
+  timeOfDay      Int? @map("time_of_day")
+  dayOfWeek      Int? @map("day_of_week")
+  
+  // AI analysis
+  aiInsights         Json? @map("ai_insights")
+  learningEfficiency Decimal? @map("learning_efficiency") @db.Decimal(3,2)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_behavior_logs")
+}
+
+model LearningAnalytics {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  
+  // Time range
+  periodType  String @map("period_type")
+  periodStart DateTime @map("period_start") @db.Date
+  periodEnd   DateTime @map("period_end") @db.Date
+  
+  // Learning volume statistics
+  totalStudyTime     Int @default(0) @map("total_study_time")
+  totalItemsStudied  Int @default(0) @map("total_items_studied")
+  totalItemsMastered Int @default(0) @map("total_items_mastered")
+  
+  // Content type statistics
+  vocabularyStats     Json? @map("vocabulary_stats")
+  passagesStats       Json? @map("passages_stats")
+  dialoguesStats      Json? @map("dialogues_stats")
+  aiInteractionStats  Json? @map("ai_interaction_stats")
+  
+  // Performance metrics
+  averageAccuracy  Decimal? @map("average_accuracy") @db.Decimal(5,2)
+  learningVelocity Decimal? @map("learning_velocity") @db.Decimal(5,2)
+  retentionRate    Decimal? @map("retention_rate") @db.Decimal(5,2)
+  
+  // AI analysis results
+  aiPerformanceAnalysis   Json? @map("ai_performance_analysis")
+  aiRecommendationSummary Json? @map("ai_recommendation_summary")
+  predictedOutcomes       Json? @map("predicted_outcomes")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, periodType, periodStart])
+  @@map("learning_analytics")
+}
