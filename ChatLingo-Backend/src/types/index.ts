@@ -73,6 +73,46 @@ export interface AiAssessmentRequest {
   targetContent?: string;
 }
 
+export interface AiPersonalityResponse {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface AiConversationResponse {
+  conversationId: string;
+  aiPersonality: string;
+  welcomeMessage: string;
+  availablePersonalities: string[];
+}
+
+export interface AiMessageResponse {
+  conversationId: string;
+  userMessage: string;
+  aiResponse: string;
+  suggestions?: string[];
+  corrections?: Array<{
+    original: string;
+    corrected: string;
+    explanation: string;
+  }>;
+  vocabulary?: Array<{
+    word: string;
+    meaning: string;
+    example: string;
+  }>;
+  messageCount: number;
+}
+
+export interface AiAssessmentResponse {
+  assessmentType: string;
+  score: number;
+  feedback: string;
+  improvements: string[];
+  strengths: string[];
+  timestamp: Date;
+}
+
 // Progress Types
 export interface UserProgressResponse {
   categoryId: string;
